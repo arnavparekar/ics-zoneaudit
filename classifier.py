@@ -171,19 +171,47 @@ def assign_security_level(asset) -> str:
         return "SL1"
 
 
-def classify_assets(assets: list) -> list:
+def _check_config_override(ip: str, config: dict) -> str:
+    """Check if the IP matches any explicit zone overrides in the config."""
+    if not config or "zones" not in config:
+        return None
+        
+    for zone, matches in config["zones"].items():
+        if not matches:
+            continue
+        for match in matches:
+            # Exact IP match
+            if match == ip:
+                return zone
+            # Subnet /24 match (e.g. 192.168.1.0/24)
+            if match.endswith("/24"):
+                subnet = match.replace(".0/24", "")
+                if ip.startswith(subnet + "."):
+                    return zone
+    return None
+
+
+def classify_assets(assets: list, config: dict = None) -> list:
     """
     Classify all assets in the list and return the modified list.
     Assigns both zone and security level.
+    If a topology config is provided, it overrides the heuristic zone logic.
 
     Args:
         assets: List of Asset objects
+        config: Optional topology YAML parsed dictionary
 
     Returns:
         list: The same list with zone and SL assignments applied
     """
     for asset in assets:
-        asset.zone = classify_zone(asset)
+        # Check config override first
+        override = _check_config_override(asset.ip, config)
+        if override:
+            asset.zone = override
+        else:
+            asset.zone = classify_zone(asset)
+            
         asset.sl = assign_security_level(asset)
     return assets
 

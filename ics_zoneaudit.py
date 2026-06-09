@@ -250,45 +250,10 @@ def _parse_with_etree(filepath: str) -> tuple:
     return assets, metadata
 
 
-def parse_args():
-    """Parse command-line arguments."""
-    parser = argparse.ArgumentParser(
-        prog="ics_zoneaudit",
-        description="ICS-ZoneAudit — IEC 62443 Zone & Conduit Compliance Auditor. "
-                    "Parses Nmap XML scans, classifies assets into IEC 62443 security zones, "
-                    "detects zone/conduit violations, and generates audit reports.",
-        epilog="Example: python ics_zoneaudit.py --input scan.xml --config topology.yml --output report --format both"
-    )
-    parser.add_argument(
-        "--input", "-i",
-        required=True,
-        help="Path to Nmap XML scan file (required)"
-    )
-    parser.add_argument(
-        "--config", "-c",
-        default=None,
-        help="Optional YAML topology config file specifying known assets, "
-             "expected zone assignments, and custom conduit rules"
-    )
-    parser.add_argument(
-        "--output", "-o",
-        default="zoneaudit_report",
-        help="Output filename prefix (default: zoneaudit_report)"
-    )
-    parser.add_argument(
-        "--format", "-f",
-        choices=["json", "html", "both"],
-        default="both",
-        help="Output format: json, html, or both (default: both)"
-    )
-    parser.add_argument(
-        "--strict",
-        action="store_true",
-        help="Exit with code 1 if any HIGH severity violation is found"
-    )
-
-    return parser.parse_args()
-
+import argparse
+import sys
+import xml.etree.ElementTree as ET
+import yaml
 
 from classifier import classify_assets
 from checker import run_all_checks
@@ -310,17 +275,34 @@ def print_assets_table(assets: list):
 
 
 def main():
-    """Main entry point for ICS-ZoneAudit."""
-    args = parse_args()
+    parser = argparse.ArgumentParser(description="ICS-ZoneAudit: IEC 62443 Compliance Tool")
+    parser.add_argument("-i", "--input", required=True, help="Path to Nmap XML scan file")
+    parser.add_argument("-c", "--config", help="Path to topology configuration YAML")
+    parser.add_argument("-o", "--output", default="zoneaudit_report", help="Output report prefix")
+    parser.add_argument("-f", "--format", choices=["json", "html", "both"], default="both", help="Report format")
+    parser.add_argument("--strict", action="store_true", help="Exit with non-zero if HIGH severity violations exist")
+    
+    args = parser.parse_args()
 
-    print(f"ICS-ZoneAudit v1.0")
-    print(f"{'=' * 60}")
+    print("ICS-ZoneAudit v1.0")
+    print("=" * 60)
     print(f"  Input file:  {args.input}")
-    print(f"  Config file: {args.config or 'None'}")
+    print(f"  Config file: {args.config}")
     print(f"  Output:      {args.output}")
     print(f"  Format:      {args.format}")
     print(f"  Strict mode: {args.strict}")
-    print(f"{'=' * 60}")
+    print("=" * 60)
+
+    # Load configuration if provided
+    config_data = None
+    if args.config:
+        try:
+            with open(args.config, "r", encoding="utf-8") as f:
+                config_data = yaml.safe_load(f)
+            print(f"\n[*] Loaded topology configuration from {args.config}")
+        except Exception as e:
+            print(f"\n[!] Error loading configuration: {e}")
+            sys.exit(1)
 
     # Step 1: Parse Nmap XML
     print("\n[*] Parsing Nmap XML...")
@@ -337,7 +319,7 @@ def main():
 
     # Step 2: Classify zones
     print("\n[*] Classifying zones...")
-    assets = classify_assets(assets)
+    assets = classify_assets(assets, config_data)
 
     zone_counts = {}
     for a in assets:
@@ -369,7 +351,7 @@ def main():
 
     # Step 4: Detect violations
     print("\n[*] Detecting violations...")
-    violations = detect_violations(assets)
+    violations = detect_violations(assets, config_data)
 
     if violations:
         print(f"    {len(violations)} violations detected")

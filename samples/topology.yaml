@@ -1,0 +1,18 @@
+# ICS-ZoneAudit Topology Override Configuration
+# This file allows you to manually define zones for specific IPs or subnets,
+# overriding the automatic heuristic classifier.
+
+zones:
+  Enterprise:
+    - 192.168.1.10         # Exact IP match
+    - 192.168.1.30
+  
+  DMZ:
+    - 192.168.1.20
+    - 192.168.2.0/24       # Subnet match (all IPs starting with 192.168.2.*)
+    
+  Control:
+    - 192.168.3.0/24
+    
+  Field Device:
+    - 192.168.4.0/24
