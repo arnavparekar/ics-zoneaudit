@@ -9,6 +9,8 @@ A Python CLI tool that ingests an Nmap XML scan of an industrial network, automa
 
 ICS-ZoneAudit makes IEC 62443 zone and conduit modelling hands-on and tangible. Instead of reading the standard as theory, you can scan a real or simulated network and immediately see how your asset topology maps to the standard.
 
+![ICS-ZoneAudit Dashboard](images/dashboard.png)
+
 ---
 
 ## Table of Contents
@@ -223,6 +225,8 @@ The HTML dashboard uses a professional, industrial dark theme to present the aud
 - **Inferred Zone Topology:** An auto-generated SVG diagram showing the Purdue model layers, asset counts, and any detected illegal conduits (highlighted in red).
 - **Violations Table:** A clear table listing architectural flaws, their severity, and affected assets.
 - **Detailed Asset Scorecards:** Individual cards for every host showing their assigned Zone, Security Level (SL), open ports, and pass/fail status for the hardening checklist.
+
+![Asset Scorecards](images/scorecards.png)
 
 ---
 
