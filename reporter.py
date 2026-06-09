@@ -133,7 +133,7 @@ def generate_zone_svg(assets: list, violations: list) -> str:
         <g transform="translate(150, {y})">
             <rect width="500" height="60" rx="8" fill="url(#boxGrad)" stroke="{c_normal}" stroke-width="2"/>
             <text x="20" y="36" fill="{c_text}" font-family="monospace" font-size="18" font-weight="bold">{title}</text>
-            <text x="350" y="36" fill="#94a3b8" font-family="monospace" font-size="14">SL: {sl} | Assets: {count}</text>
+            <text x="480" y="36" fill="#94a3b8" font-family="monospace" font-size="14" text-anchor="end">SL: {sl} | Assets: {count}</text>
         </g>
         '''
         
