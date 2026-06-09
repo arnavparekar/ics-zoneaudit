@@ -1,0 +1,99 @@
+name: ics-zoneaudit-lab
+
+services:
+  # ---------------------------------------------------------
+  # Enterprise Zone (192.168.1.0/24)
+  # ---------------------------------------------------------
+  file-server-01:
+    image: alpine:latest
+    hostname: file-server-01
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 22 & nc -l -k 80 & nc -l -k 443 & nc -l -k 445 & wait)"
+    networks:
+      ent_net:
+        ipv4_address: 192.168.1.10
+
+  mail-server-01:
+    image: alpine:latest
+    hostname: mail-server-01
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 21 & nc -l -k 23 & nc -l -k 80 & nc -l -k 443 & wait)"
+    networks:
+      ent_net:
+        ipv4_address: 192.168.1.30
+
+  # ---------------------------------------------------------
+  # DMZ Zone (192.168.2.0/24)
+  # ---------------------------------------------------------
+  eng-ws-01:
+    image: alpine:latest
+    hostname: eng-ws-01
+    # Dual-homed (Violation V-001) + SNMP exposed (Violation V-009)
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 22 & nc -l -k 80 & nc -l -k 161 & nc -l -k 443 & nc -l -k 3389 & nc -l -k 4840 & wait)"
+    networks:
+      ent_net:
+        ipv4_address: 192.168.1.20
+      dmz_net:
+        ipv4_address: 192.168.2.200
+
+  historian-01:
+    image: alpine:latest
+    hostname: historian-01
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 22 & nc -l -k 443 & nc -l -k 4840 & wait)"
+    networks:
+      dmz_net:
+        ipv4_address: 192.168.2.10
+
+  # ---------------------------------------------------------
+  # Control Zone (192.168.3.0/24)
+  # ---------------------------------------------------------
+  scada-server-01:
+    image: alpine:latest
+    hostname: scada-server-01
+    # Dual-homed (Violation V-002)
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 22 & nc -l -k 80 & nc -l -k 443 & nc -l -k 445 & nc -l -k 4840 & nc -l -k 44818 & wait)"
+    networks:
+      ctrl_net:
+        ipv4_address: 192.168.3.10
+
+  # ---------------------------------------------------------
+  # Field Device Zone (192.168.4.0/24)
+  # ---------------------------------------------------------
+  plc-modbus-01:
+    image: alpine:latest
+    hostname: plc-modbus-01
+    # Direct field-to-enterprise conduit (Violation V-004)
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 80 & nc -l -k 502 & nc -l -k 3389 & wait)"
+    networks:
+      field_net:
+        ipv4_address: 192.168.4.10
+      ent_net:
+        ipv4_address: 192.168.1.100
+
+  plc-siemens-01:
+    image: alpine:latest
+    hostname: plc-siemens-01
+    command: /bin/sh -c "apk add --no-cache netcat-openbsd && (nc -l -k 21 & nc -l -k 23 & nc -l -k 80 & nc -l -k 102 & nc -l -k 161 & wait)"
+    networks:
+      field_net:
+        ipv4_address: 192.168.4.40
+
+networks:
+  ent_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.1.0/24
+  dmz_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.2.0/24
+  ctrl_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.3.0/24
+  field_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.4.0/24
