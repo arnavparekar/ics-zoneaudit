@@ -292,6 +292,7 @@ def parse_args():
 
 from classifier import classify_assets
 from checker import run_all_checks
+from violations import detect_violations
 
 
 def print_assets_table(assets: list):
@@ -365,11 +366,26 @@ def main():
         failed_str = ", ".join(failed) if failed else "None"
         print(f"{asset.ip:<18} {asset.zone:<18} {asset.score}/{asset.max_score:<10} {failed_str}")
 
-    # Future steps (not yet implemented)
-    print("\n[*] Detecting violations...      (not yet implemented)")
-    print("[*] Generating report...         (not yet implemented)")
+    # Step 4: Detect violations
+    print("\n[*] Detecting violations...")
+    violations = detect_violations(assets)
 
-    return 0
+    if violations:
+        print(f"    {len(violations)} violations detected")
+        print(f"\n{'ID':<7} {'Severity':<10} {'Type':<40} {'Affected Assets'}")
+        print("-" * 90)
+        for v in violations:
+            assets_str = ", ".join(v.affected_assets)
+            print(f"{v.violation_id:<7} {v.severity:<10} {v.type[:38]:<40} {assets_str}")
+    else:
+        print("    No violations detected")
+
+    # Future steps (not yet implemented)
+    print("\n[*] Generating report...         (not yet implemented)")
+
+    if args.strict and any(v.severity == "HIGH" for v in violations):
+        print("\n[!] Strict mode enabled: HIGH severity violation detected. Exiting with error.")
+        return 1
 
 
 if __name__ == "__main__":
