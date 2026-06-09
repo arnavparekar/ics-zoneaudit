@@ -256,7 +256,108 @@
             filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
         }
 
-        /* SVG Inner Styling via inline tags when rendered */
+        /* Asset Scorecards */
+        .scorecard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .scorecard {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .scorecard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1rem;
+        }
+
+        .asset-ip {
+            font-size: 1.25rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            color: #bae6fd;
+        }
+
+        .asset-host {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .asset-score {
+            font-size: 1.5rem;
+            font-weight: 700;
+            padding: 0.25rem 0.75rem;
+            border-radius: 8px;
+            background: rgba(0,0,0,0.2);
+        }
+
+        .score-perfect { color: var(--low-color); }
+        .score-good { color: var(--medium-color); }
+        .score-bad { color: var(--high-color); }
+
+        .asset-meta {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .ports-list {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            background: rgba(0,0,0,0.2);
+            padding: 0.75rem;
+            border-radius: 6px;
+        }
+
+        .checks-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .check-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            font-size: 0.85rem;
+            padding: 0.5rem;
+            border-radius: 6px;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .check-status {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .check-pass { color: var(--low-color); }
+        .check-fail { color: var(--high-color); }
+
+        .check-name {
+            font-weight: 500;
+            color: var(--text-main);
+        }
+
+        .check-error {
+            color: var(--high-color);
+            font-size: 0.8rem;
+            margin-top: 0.25rem;
+        }
+
     </style>
 </head>
 <body>
@@ -345,7 +446,53 @@
             {% endif %}
         </div>
         
-        <!-- Asset Scorecards to be added in Commit 10 -->
+        <!-- Asset Scorecards -->
+        <h2 class="panel-title" style="margin-top: 3rem;">Detailed Asset Scorecards</h2>
+        <div class="scorecard-grid">
+            {% for asset in assets %}
+            <div class="scorecard">
+                <div class="scorecard-header">
+                    <div>
+                        <div class="asset-ip">{{ asset.ip }}</div>
+                        <div class="asset-host">{{ asset.hostname or 'Unknown Host' }} | {{ asset.os_match }}</div>
+                    </div>
+                    <div class="asset-score {% if asset.score == asset.max_score %}score-perfect{% elif asset.score >= 10 %}score-good{% else %}score-bad{% endif %}">
+                        {{ asset.score }}/{{ asset.max_score }}
+                    </div>
+                </div>
+                
+                <div class="asset-meta">
+                    <span class="badge badge-low">{{ asset.zone }}</span>
+                    <span class="badge" style="background: rgba(255,255,255,0.1);">{{ asset.sl }}</span>
+                </div>
+                
+                <div class="ports-list">
+                    <strong>Open Ports:</strong> 
+                    {% if asset.open_ports %}
+                        {{ asset.open_ports|join(', ') }}
+                    {% else %}
+                        None detected
+                    {% endif %}
+                </div>
+                
+                <div class="checks-list">
+                    {% for check_id, check in asset.checks.items() %}
+                    <div class="check-item">
+                        <div class="check-status {% if check.passed %}check-pass{% else %}check-fail{% endif %}">
+                            {% if check.passed %}✓{% else %}✗{% endif %}
+                        </div>
+                        <div class="check-details">
+                            <div class="check-name">{{ check.name }}</div>
+                            {% if not check.passed %}
+                            <div class="check-error">{{ check.details }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
 
     </div>
 </body>
