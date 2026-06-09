@@ -291,6 +291,7 @@ def parse_args():
 
 
 from classifier import classify_assets
+from checker import run_all_checks
 
 
 def print_assets_table(assets: list):
@@ -344,9 +345,28 @@ def main():
 
     print_assets_table(assets)
 
+    # Step 3: Run hardening checks
+    print("\n[*] Running hardening checks...")
+    assets = run_all_checks(assets)
+
+    # Print hardening summary
+    total_checks = sum(a.max_score for a in assets)
+    total_passed = sum(a.score for a in assets)
+    total_failed = total_checks - total_passed
+    print(f"    {total_passed}/{total_checks} checks passed across {len(assets)} assets")
+    if total_failed > 0:
+        print(f"    {total_failed} failed checks detected")
+
+    # Show per-asset scores
+    print(f"\n{'IP Address':<18} {'Zone':<18} {'Score':<12} {'Failed Checks'}")
+    print("-" * 90)
+    for asset in assets:
+        failed = [cid for cid, c in asset.checks.items() if not c["passed"]]
+        failed_str = ", ".join(failed) if failed else "None"
+        print(f"{asset.ip:<18} {asset.zone:<18} {asset.score}/{asset.max_score:<10} {failed_str}")
+
     # Future steps (not yet implemented)
-    print("\n[*] Running hardening checks...  (not yet implemented)")
-    print("[*] Detecting violations...      (not yet implemented)")
+    print("\n[*] Detecting violations...      (not yet implemented)")
     print("[*] Generating report...         (not yet implemented)")
 
     return 0
