@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE nmaprun>
+<?xml-stylesheet href="file:///usr/local/bin/../share/nmap/nmap.xsl" type="text/xsl"?>
+<!-- ICS-ZoneAudit Demo Scan: 12-host simulated ICS network -->
+<!-- Subnet layout:
+     192.168.1.0/24 = Enterprise Zone
+     192.168.2.0/24 = DMZ Zone
+     192.168.3.0/24 = Control Zone
+     192.168.4.0/24 = Field Device Zone
+     Deliberate misconfigurations included for violation testing.
+-->
+<nmaprun scanner="nmap" args="nmap -sV -p 21,22,23,80,102,111,161,443,445,502,3389,4840,20000,44818 -oX demo_scan.xml 192.168.1-4.0/24" start="1717900800" startstr="Mon Jun 09 00:00:00 2025" version="7.94" xmloutputversion="1.05">
+<scaninfo type="syn" protocol="tcp" numservices="14" services="21-23,80,102,111,161,443,445,502,3389,4840,20000,44818"/>
+<verbose level="0"/>
+<debugging level="0"/>
+
+<!-- ============================================================ -->
+<!-- HOST 1: Enterprise File Server (192.168.1.10) -->
+<!-- Clean enterprise host — no violations expected -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.1.10" addrtype="ipv4"/>
+<hostnames><hostname name="file-server-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ssh" product="OpenSSH" version="8.9p1" extrainfo="Ubuntu" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="Apache httpd" version="2.4.54" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="https" product="Apache httpd" version="2.4.54" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="microsoft-ds" product="Samba smbd" version="4.15.9" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Linux 5.15" accuracy="96"><osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="96"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 2: Enterprise Workstation (192.168.1.20) -->
+<!-- VIOLATION: Has OPC UA port open (H-06) — ICS protocol on enterprise -->
+<!-- VIOLATION: Has SNMP open (H-09) — externally reachable -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.1.20" addrtype="ipv4"/>
+<hostnames><hostname name="eng-ws-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="ssh" product="OpenSSH" version="8.2p1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="http" product="nginx" version="1.22.1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="161"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="snmp" product="net-snmp" version="5.9.3" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="https" product="nginx" version="1.22.1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="3389"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="ms-wbt-server" product="Microsoft Terminal Services" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="4840"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="opcua" product="open62541 OPC UA" version="1.3.4" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="closed" reason="reset" reason_ttl="128"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="closed" reason="reset" reason_ttl="128"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="closed" reason="reset" reason_ttl="128"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="closed" reason="reset" reason_ttl="128"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="closed" reason="reset" reason_ttl="128"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="closed" reason="reset" reason_ttl="128"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="closed" reason="reset" reason_ttl="128"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="closed" reason="reset" reason_ttl="128"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Windows 10" accuracy="92"><osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="10" accuracy="92"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 3: Enterprise Email Server (192.168.1.30) -->
+<!-- VIOLATION: Has Telnet open (H-01), FTP open (H-02), no SSH (H-05) -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.1.30" addrtype="ipv4"/>
+<hostnames><hostname name="mail-server-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="21"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ftp" product="vsftpd" version="3.0.5" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="23"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="telnet" product="Linux telnetd" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="Apache httpd" version="2.4.54" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="https" product="Apache httpd" version="2.4.54" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="22"><state state="closed" reason="reset" reason_ttl="64"/><service name="ssh" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="closed" reason="reset" reason_ttl="64"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="closed" reason="reset" reason_ttl="64"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="closed" reason="reset" reason_ttl="64"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="closed" reason="reset" reason_ttl="64"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="closed" reason="reset" reason_ttl="64"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="closed" reason="reset" reason_ttl="64"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="closed" reason="reset" reason_ttl="64"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="closed" reason="reset" reason_ttl="64"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="closed" reason="reset" reason_ttl="64"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Linux 5.15" accuracy="95"><osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="95"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 4: DMZ Historian Server (192.168.2.10) -->
+<!-- Clean DMZ host with OPC UA (expected) -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.2.10" addrtype="ipv4"/>
+<hostnames><hostname name="historian-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ssh" product="OpenSSH" version="8.9p1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="https" product="nginx" version="1.22.1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="4840"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="opcua" product="open62541 OPC UA" version="1.3.4" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="80"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="http" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Linux 5.15" accuracy="96"><osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="96"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 5: DMZ Remote Access Gateway (192.168.2.20) -->
+<!-- VIOLATION: Has Telnet open (H-01), RPC open (H-04) -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.2.20" addrtype="ipv4"/>
+<hostnames><hostname name="vpn-gateway-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ssh" product="OpenSSH" version="8.9p1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="23"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="telnet" product="Linux telnetd" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="nginx" version="1.22.1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="111"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="rpcbind" product="rpcbind" version="2-4" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="https" product="nginx" version="1.22.1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="3389"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ms-wbt-server" product="Microsoft Terminal Services" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="closed" reason="reset" reason_ttl="64"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="closed" reason="reset" reason_ttl="64"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="closed" reason="reset" reason_ttl="64"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="closed" reason="reset" reason_ttl="64"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="closed" reason="reset" reason_ttl="64"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="closed" reason="reset" reason_ttl="64"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="closed" reason="reset" reason_ttl="64"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="closed" reason="reset" reason_ttl="64"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Linux 5.15" accuracy="94"><osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="94"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 6: SCADA Server (192.168.3.10) -->
+<!-- VIOLATION: Has SMB open on control network (H-11) -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.3.10" addrtype="ipv4"/>
+<hostnames><hostname name="scada-server-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ssh" product="OpenSSH" version="7.9p1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="Inductive Automation Ignition" version="8.1.24" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="https" product="Inductive Automation Ignition" version="8.1.24" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="microsoft-ds" product="Samba smbd" version="4.15.9" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="4840"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="opcua" product="open62541 OPC UA" version="1.3.4" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="44818"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="EtherNetIP" product="Allen-Bradley Logix" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="dnp" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Linux 5.15" accuracy="95"><osclass type="general purpose" vendor="Linux" osfamily="Linux" osgen="5.X" accuracy="95"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 7: HMI Workstation (192.168.3.20) -->
+<!-- Clean control zone host — hostname-classified -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.3.20" addrtype="ipv4"/>
+<hostnames><hostname name="hmi-station-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="ssh" product="OpenSSH" version="8.2p1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="http" product="Siemens WinCC" version="7.5" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="443"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="https" product="Siemens WinCC" version="7.5" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Windows 10" accuracy="92"><osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="10" accuracy="92"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 8: Engineering Workstation (192.168.3.30) -->
+<!-- Clean control zone host -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.3.30" addrtype="ipv4"/>
+<hostnames><hostname name="eng-workstation-02" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="22"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="ssh" product="OpenSSH" version="8.2p1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="http" product="Rockwell Studio 5000" version="34.01" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="3389"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="ms-wbt-server" product="Microsoft Terminal Services" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="44818"><state state="open" reason="syn-ack" reason_ttl="128"/><service name="EtherNetIP" product="Allen-Bradley Logix" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="443"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="https" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="dnp" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Windows 10" accuracy="90"><osclass type="general purpose" vendor="Microsoft" osfamily="Windows" osgen="10" accuracy="90"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 9: Modbus PLC #1 (192.168.4.10) -->
+<!-- VIOLATION: Has web interface on PLC (H-08), RDP on field device (H-07) -->
+<!-- VIOLATION: Same /24 as Host 12 which is enterprise-reachable (H-14 via field-enterprise /24 match) -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.4.10" addrtype="ipv4"/>
+<hostnames><hostname name="plc-modbus-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="Schneider Electric M340" version="3.20" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="502"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="modbus" product="Schneider Electric Modbus" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="3389"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ms-wbt-server" product="Microsoft Terminal Services" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="closed" reason="reset" reason_ttl="64"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="22"><state state="closed" reason="reset" reason_ttl="64"/><service name="ssh" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="closed" reason="reset" reason_ttl="64"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="closed" reason="reset" reason_ttl="64"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="closed" reason="reset" reason_ttl="64"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="closed" reason="reset" reason_ttl="64"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="443"><state state="closed" reason="reset" reason_ttl="64"/><service name="https" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="closed" reason="reset" reason_ttl="64"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="closed" reason="reset" reason_ttl="64"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="closed" reason="reset" reason_ttl="64"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="closed" reason="reset" reason_ttl="64"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Schneider Electric M340 PLC" accuracy="98"><osclass type="specialized" vendor="Schneider Electric" osfamily="embedded" accuracy="98"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 10: Modbus PLC #2 (192.168.4.20) -->
+<!-- VIOLATION: Has Telnet open (H-01), SMB on field device (H-11) -->
+<!-- No firewall evidence — all ports open or closed, none filtered (H-15) -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.4.20" addrtype="ipv4"/>
+<hostnames><hostname name="plc-modbus-02" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="23"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="telnet" product="Moxa NPort" version="5.1" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="445"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="microsoft-ds" product="Samba smbd" version="3.6.25" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="502"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="modbus" product="Schneider Electric Modbus" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="closed" reason="reset" reason_ttl="64"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="22"><state state="closed" reason="reset" reason_ttl="64"/><service name="ssh" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="80"><state state="closed" reason="reset" reason_ttl="64"/><service name="http" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="closed" reason="reset" reason_ttl="64"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="closed" reason="reset" reason_ttl="64"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="closed" reason="reset" reason_ttl="64"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="443"><state state="closed" reason="reset" reason_ttl="64"/><service name="https" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="closed" reason="reset" reason_ttl="64"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="closed" reason="reset" reason_ttl="64"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="closed" reason="reset" reason_ttl="64"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="closed" reason="reset" reason_ttl="64"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Schneider Electric M580 PLC" accuracy="97"><osclass type="specialized" vendor="Schneider Electric" osfamily="embedded" accuracy="97"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 11: DNP3 Outstation / RTU (192.168.4.30) -->
+<!-- Clean field device — DNP3 only, well-firewalled -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.4.30" addrtype="ipv4"/>
+<hostnames><hostname name="rtu-dnp3-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="20000"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="dnp" product="SEL DNP3 Outstation" version="3.2" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="21"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ftp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="22"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ssh" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="23"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="telnet" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="80"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="http" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="102"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="iso-tsap" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="161"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="snmp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="443"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="https" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="filtered" reason="no-response" reason_ttl="0"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="SEL-3530 RTAC" accuracy="95"><osclass type="specialized" vendor="Schweitzer Engineering" osfamily="embedded" accuracy="95"/></osmatch></os>
+</host>
+
+<!-- ============================================================ -->
+<!-- HOST 12: Siemens S7 PLC (192.168.4.40) -->
+<!-- VIOLATION: Has web interface (H-08), FTP open (H-02), Telnet open (H-01) -->
+<!-- VIOLATION: No firewall — no filtered ports (H-15) -->
+<!-- Worst-scoring asset in the demo -->
+<!-- ============================================================ -->
+<host starttime="1717900800" endtime="1717900810">
+<status state="up" reason="arp-response" reason_ttl="0"/>
+<address addr="192.168.4.40" addrtype="ipv4"/>
+<hostnames><hostname name="plc-siemens-01" type="PTR"/></hostnames>
+<ports>
+  <port protocol="tcp" portid="21"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="ftp" product="Siemens S7-1500 FTP" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="23"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="telnet" product="Siemens S7 Telnet" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="80"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="http" product="Siemens S7-1500 Web Server" version="2.9" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="102"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="iso-tsap" product="Siemens S7comm" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="161"><state state="open" reason="syn-ack" reason_ttl="64"/><service name="snmp" product="net-snmp" version="5.7" method="probed" conf="10"/></port>
+  <port protocol="tcp" portid="22"><state state="closed" reason="reset" reason_ttl="64"/><service name="ssh" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="111"><state state="closed" reason="reset" reason_ttl="64"/><service name="rpcbind" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="443"><state state="closed" reason="reset" reason_ttl="64"/><service name="https" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="445"><state state="closed" reason="reset" reason_ttl="64"/><service name="microsoft-ds" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="502"><state state="closed" reason="reset" reason_ttl="64"/><service name="modbus" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="3389"><state state="closed" reason="reset" reason_ttl="64"/><service name="ms-wbt-server" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="4840"><state state="closed" reason="reset" reason_ttl="64"/><service name="opcua" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="20000"><state state="closed" reason="reset" reason_ttl="64"/><service name="dnp" method="table" conf="3"/></port>
+  <port protocol="tcp" portid="44818"><state state="closed" reason="reset" reason_ttl="64"/><service name="EtherNetIP" method="table" conf="3"/></port>
+</ports>
+<os><osmatch name="Siemens S7-1500 PLC" accuracy="99"><osclass type="specialized" vendor="Siemens" osfamily="embedded" accuracy="99"/></osmatch></os>
+</host>
+
+<runstats><finished time="1717900860" timestr="Mon Jun 09 00:01:00 2025" summary="Nmap done at Mon Jun 09 00:01:00 2025; 12 IP addresses (12 hosts up) scanned in 60.00 seconds" elapsed="60.00" exit="success"/><hosts up="12" down="0" total="12"/></runstats>
+</nmaprun>
