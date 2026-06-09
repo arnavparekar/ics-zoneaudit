@@ -123,16 +123,67 @@ def classify_zone(asset) -> str:
     return "Unknown"
 
 
+def assign_security_level(asset) -> str:
+    """
+    Assign an IEC 62443 Security Level (SL) to an asset based on its
+    zone classification and detected services.
+
+    Security Level assignments per IEC 62443-3-3:
+      - Enterprise Zone: SL1 (basic protection)
+      - DMZ Zone: SL2 (protection against intentional violation with simple means)
+      - Control Zone: SL2 base, SL3 if critical ICS protocols are present
+      - Field Device Zone: SL2 base, SL3 if critical protocols (S7, DNP3)
+      - Unknown Zone: SL1 (treated as unclassified, needs investigation)
+
+    Args:
+        asset: An Asset object with zone and open_port_numbers
+
+    Returns:
+        str: Security Level — 'SL1', 'SL2', or 'SL3'
+    """
+    open_port_nums = asset.open_port_numbers
+
+    # Critical ICS protocols that elevate SL to SL3
+    critical_ics_ports = {102, 20000, 502}  # S7comm, DNP3, Modbus
+
+    if asset.zone == "Enterprise":
+        return "SL1"
+
+    elif asset.zone == "DMZ":
+        return "SL2"
+
+    elif asset.zone == "Control":
+        # Elevate to SL3 if handling critical ICS protocols
+        if open_port_nums & critical_ics_ports:
+            return "SL3"
+        # Also SL3 if EtherNet/IP is present (direct process control)
+        if 44818 in open_port_nums:
+            return "SL3"
+        return "SL2"
+
+    elif asset.zone == "Field Device":
+        # Field devices with critical protocols get SL3
+        if open_port_nums & critical_ics_ports:
+            return "SL3"
+        return "SL2"
+
+    else:  # Unknown
+        return "SL1"
+
+
 def classify_assets(assets: list) -> list:
     """
     Classify all assets in the list and return the modified list.
+    Assigns both zone and security level.
 
     Args:
         assets: List of Asset objects
 
     Returns:
-        list: The same list with zone assignments applied
+        list: The same list with zone and SL assignments applied
     """
     for asset in assets:
         asset.zone = classify_zone(asset)
+        asset.sl = assign_security_level(asset)
     return assets
+

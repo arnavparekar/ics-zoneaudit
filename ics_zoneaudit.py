@@ -295,15 +295,15 @@ from classifier import classify_assets
 
 def print_assets_table(assets: list):
     """Print a formatted table of discovered assets."""
-    print(f"\n{'IP Address':<18} {'Hostname':<25} {'Zone':<18} {'Open Ports'}")
-    print("-" * 100)
+    print(f"\n{'IP Address':<18} {'Hostname':<25} {'Zone':<18} {'SL':<6} {'Open Ports'}")
+    print("-" * 110)
     for asset in assets:
         open_ports = ", ".join(
             f"{p.number}/{p.service_name}" for p in asset.open_ports
         )
         hostname_display = asset.hostname[:23] if asset.hostname else "N/A"
         zone_display = asset.zone
-        print(f"{asset.ip:<18} {hostname_display:<25} {zone_display:<18} {open_ports}")
+        print(f"{asset.ip:<18} {hostname_display:<25} {zone_display:<18} {asset.sl:<6} {open_ports}")
 
 
 def main():
