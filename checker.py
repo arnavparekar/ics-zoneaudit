@@ -175,8 +175,177 @@ def check_h08_no_web_on_plc(asset, all_assets=None) -> CheckResult:
         )
     )
 
+def check_h09_snmp_not_exposed(asset, all_assets=None) -> CheckResult:
+    """
+    H-09: SNMP not exposed externally.
 
-# Registry of all checks implemented so far (H-01 through H-08)
+    Fail condition: Port 161 is open AND asset is in Enterprise zone OR DMZ
+    (SNMP externally reachable from enterprise-facing networks).
+    """
+    failed = asset.has_open_port(161) and asset.zone in ("Enterprise", "DMZ")
+    return CheckResult(
+        check_id="H-09",
+        name="SNMP not exposed externally",
+        passed=not failed,
+        fail_condition="Port 161 on Enterprise or DMZ zone asset",
+        source="NIST 800-82",
+        details="" if not failed else (
+            f"SNMP (port 161) is externally reachable on {asset.ip} "
+            f"({asset.zone} zone) — SNMP should not be exposed on "
+            f"enterprise-facing networks"
+        )
+    )
+
+
+def check_h10_not_dual_homed(asset, all_assets=None) -> CheckResult:
+    """
+    H-10: Engineering workstation not dual-homed.
+
+    Fail condition: Asset appears in both Enterprise + Control zone.
+    Since our classifier assigns a single zone, we detect this by checking
+    if the asset has both strong enterprise characteristics (RDP or SMB)
+    AND control characteristics (ICS protocols or control hostname).
+    Web ports alone are not sufficient enterprise indicators since they
+    are common across all zones.
+    """
+    open_port_nums = asset.open_port_numbers
+    hostname_lower = asset.hostname.lower() if asset.hostname else ""
+
+    # Enterprise indicators — strong signals only (RDP, SMB)
+    has_enterprise_traits = bool(open_port_nums & {3389, 445})
+
+    # Control indicators — ICS protocols or control hostname
+    control_keywords = ["hmi", "scada", "dcs", "engineering", "eng-workstation"]
+    has_control_traits = bool(
+        open_port_nums & {44818, 4840, 502, 20000, 102} or
+        any(kw in hostname_lower for kw in control_keywords)
+    )
+
+    failed = has_enterprise_traits and has_control_traits
+    return CheckResult(
+        check_id="H-10",
+        name="Not dual-homed (Enterprise+Control)",
+        passed=not failed,
+        fail_condition="Asset shows both Enterprise and Control zone characteristics",
+        source="IEC 62443-3-2 Zone isolation",
+        details="" if not failed else (
+            f"Asset {asset.ip} ({asset.hostname}) appears to be dual-homed — "
+            f"has both enterprise services and ICS/control indicators"
+        )
+    )
+
+
+def check_h11_no_smb_control(asset, all_assets=None) -> CheckResult:
+    """H-11: SMB not on control network — Port 445 on Control or Field Device zone is a fail."""
+    failed = asset.has_open_port(445) and asset.zone in ("Control", "Field Device")
+    return CheckResult(
+        check_id="H-11",
+        name="SMB not on control network",
+        passed=not failed,
+        fail_condition="Port 445 on Control or Field Device zone asset",
+        source="IEC 62443-3-3 SR 5.2",
+        details="" if not failed else (
+            f"SMB (port 445) is open on {asset.ip} in {asset.zone} zone — "
+            f"file sharing protocols should not be on control/field networks"
+        )
+    )
+
+
+def check_h12_port_count(asset, all_assets=None) -> CheckResult:
+    """H-12: No unnecessary open ports — Asset has >10 open ports is a fail."""
+    count = len(asset.open_ports)
+    failed = count > 10
+    return CheckResult(
+        check_id="H-12",
+        name="No unnecessary open ports",
+        passed=not failed,
+        fail_condition="Asset has >10 open ports",
+        source="General hardening",
+        details="" if not failed else (
+            f"Asset {asset.ip} has {count} open ports — "
+            f"excessive open ports increase attack surface"
+        )
+    )
+
+
+def check_h13_ics_not_on_enterprise(asset, all_assets=None) -> CheckResult:
+    """
+    H-13: ICS protocol port not on enterprise asset.
+
+    Fail condition: Modbus/DNP3/S7comm port open on an Enterprise zone asset.
+    """
+    has_ics = bool(asset.open_port_numbers & ICS_PROTOCOL_PORTS)
+    failed = has_ics and asset.zone == "Enterprise"
+    return CheckResult(
+        check_id="H-13",
+        name="ICS protocol not on enterprise asset",
+        passed=not failed,
+        fail_condition="Modbus/DNP3/S7 port on Enterprise zone asset",
+        source="IEC 62443-3-2",
+        details="" if not failed else (
+            f"ICS protocol port detected on enterprise asset {asset.ip} — "
+            f"industrial protocols should not be present on enterprise network"
+        )
+    )
+
+
+def check_h14_no_field_enterprise_conduit(asset, all_assets=None) -> CheckResult:
+    """
+    H-14: No direct field device to enterprise conduit.
+
+    Fail condition: A Field Device zone asset and an Enterprise zone asset
+    share the same /24 subnet (inferred direct conduit, no DMZ in between).
+    """
+    if all_assets is None:
+        all_assets = []
+
+    failed = False
+    enterprise_peer = ""
+
+    if asset.zone == "Field Device":
+        asset_subnet = asset.subnet_24
+        for other in all_assets:
+            if other.zone == "Enterprise" and other.subnet_24 == asset_subnet:
+                failed = True
+                enterprise_peer = other.ip
+                break
+
+    return CheckResult(
+        check_id="H-14",
+        name="No field-to-enterprise conduit",
+        passed=not failed,
+        fail_condition="Field Device and Enterprise asset on same /24 subnet",
+        source="IEC 62443-3-2 conduit rules",
+        details="" if not failed else (
+            f"Field device {asset.ip} shares /24 subnet with enterprise "
+            f"asset {enterprise_peer} — direct conduit without DMZ detected"
+        )
+    )
+
+
+def check_h15_firewall_evidence(asset, all_assets=None) -> CheckResult:
+    """
+    H-15: Firewall evidence present.
+
+    Fail condition: All scanned ports return open or closed, none filtered.
+    At least one 'filtered' port is evidence that a firewall is in the path.
+    """
+    has_filtered = len(asset.filtered_ports) > 0
+    failed = not has_filtered
+    return CheckResult(
+        check_id="H-15",
+        name="Firewall evidence present",
+        passed=not failed,
+        fail_condition="No filtered ports detected (no firewall evidence)",
+        source="IEC 62443-3-2",
+        details="" if not failed else (
+            f"No filtered ports on {asset.ip} — all ports are open or closed, "
+            f"suggesting no firewall or packet filter is protecting this asset"
+        )
+    )
+
+
+# Complete registry of all 15 hardening checks
 HARDENING_CHECKS = [
     check_h01_telnet_disabled,
     check_h02_ftp_disabled,
@@ -186,6 +355,13 @@ HARDENING_CHECKS = [
     check_h06_opcua_not_enterprise,
     check_h07_no_rdp_field,
     check_h08_no_web_on_plc,
+    check_h09_snmp_not_exposed,
+    check_h10_not_dual_homed,
+    check_h11_no_smb_control,
+    check_h12_port_count,
+    check_h13_ics_not_on_enterprise,
+    check_h14_no_field_enterprise_conduit,
+    check_h15_firewall_evidence,
 ]
 
 
