@@ -290,17 +290,20 @@ def parse_args():
     return parser.parse_args()
 
 
+from classifier import classify_assets
+
+
 def print_assets_table(assets: list):
     """Print a formatted table of discovered assets."""
-    print(f"\n{'IP Address':<18} {'Hostname':<25} {'OS Match':<30} {'Open Ports'}")
+    print(f"\n{'IP Address':<18} {'Hostname':<25} {'Zone':<18} {'Open Ports'}")
     print("-" * 100)
     for asset in assets:
         open_ports = ", ".join(
             f"{p.number}/{p.service_name}" for p in asset.open_ports
         )
-        os_display = asset.os_match[:28] if asset.os_match else "N/A"
         hostname_display = asset.hostname[:23] if asset.hostname else "N/A"
-        print(f"{asset.ip:<18} {hostname_display:<25} {os_display:<30} {open_ports}")
+        zone_display = asset.zone
+        print(f"{asset.ip:<18} {hostname_display:<25} {zone_display:<18} {open_ports}")
 
 
 def main():
@@ -328,11 +331,21 @@ def main():
         return 1
 
     print(f"    Found {len(assets)} hosts up")
+
+    # Step 2: Classify zones
+    print("\n[*] Classifying zones...")
+    assets = classify_assets(assets)
+
+    zone_counts = {}
+    for a in assets:
+        zone_counts[a.zone] = zone_counts.get(a.zone, 0) + 1
+    for zone, count in sorted(zone_counts.items()):
+        print(f"    {zone}: {count} assets")
+
     print_assets_table(assets)
 
     # Future steps (not yet implemented)
-    print("\n[*] Classifying zones...         (not yet implemented)")
-    print("[*] Running hardening checks...  (not yet implemented)")
+    print("\n[*] Running hardening checks...  (not yet implemented)")
     print("[*] Detecting violations...      (not yet implemented)")
     print("[*] Generating report...         (not yet implemented)")
 
