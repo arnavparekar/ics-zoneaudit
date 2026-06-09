@@ -293,7 +293,7 @@ def parse_args():
 from classifier import classify_assets
 from checker import run_all_checks
 from violations import detect_violations
-from reporter import generate_json_report
+from reporter import generate_json_report, generate_html_report
 
 
 def print_assets_table(assets: list):
@@ -388,7 +388,8 @@ def main():
         print(f"    [+] JSON report saved to {json_path}")
     
     if args.format in ["html", "both"]:
-        print("    [!] HTML report not yet implemented")
+        html_path = generate_html_report(assets, violations, metadata, args.output)
+        print(f"    [+] HTML report saved to {html_path}")
 
     if args.strict and any(v.severity == "HIGH" for v in violations):
         print("\n[!] Strict mode enabled: HIGH severity violation detected. Exiting with error.")

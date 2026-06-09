@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ICS-ZoneAudit Report</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Modern Dark Theme Palette */
+            --bg-base: #0f111a;
+            --bg-surface: #1a1d2d;
+            --bg-elevated: rgba(30, 34, 53, 0.7);
+            
+            --text-main: #e2e8f0;
+            --text-muted: #94a3b8;
+            
+            --accent-primary: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.5);
+            
+            /* Severity Colors */
+            --high-color: #ef4444;
+            --high-bg: rgba(239, 68, 68, 0.15);
+            --medium-color: #f59e0b;
+            --medium-bg: rgba(245, 158, 11, 0.15);
+            --low-color: #10b981;
+            --low-bg: rgba(16, 185, 129, 0.15);
+            
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            line-height: 1.6;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 85% 30%, rgba(239, 68, 68, 0.05) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-title h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-title p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .header-meta {
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Glassmorphism Panels */
+        .panel {
+            background: var(--bg-elevated);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .panel-title::before {
+            content: '';
+            display: inline-block;
+            width: 4px;
+            height: 1.25rem;
+            background: var(--accent-primary);
+            border-radius: 2px;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--accent-primary), transparent);
+            opacity: 0.5;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-high { color: var(--high-color); background: var(--high-bg); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-medium { color: var(--medium-color); background: var(--medium-bg); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-low { color: var(--low-color); background: var(--low-bg); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        /* Tables */
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            text-align: left;
+        }
+
+        th {
+            padding: 1rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        td {
+            padding: 1.25rem 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: top;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            color: #bae6fd;
+        }
+
+        .violation-desc {
+            color: #cbd5e1;
+            margin-bottom: 0.5rem;
+        }
+
+        .violation-ref {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .violation-ref::before {
+            content: '📚';
+        }
+
+        /* Topology Container */
+        .topology-container {
+            width: 100%;
+            height: 500px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            border: 1px inset rgba(255,255,255,0.05);
+        }
+
+        svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
+        }
+
+        /* SVG Inner Styling via inline tags when rendered */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-title">
+                <h1>ICS-ZoneAudit</h1>
+                <p>IEC 62443 Compliance & Topology Report</p>
+            </div>
+            <div class="header-meta">
+                <div>Target: {{ scan_metadata.target }}</div>
+                <div>Hosts Scanned: {{ scan_metadata.total_hosts }}</div>
+            </div>
+        </header>
+
+        <!-- Zone Summary Dashboard -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-value" style="color: #60a5fa;">{{ zone_summary.get('Enterprise', 0) }}</div>
+                <div class="stat-label">Enterprise Assets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #a78bfa;">{{ zone_summary.get('DMZ', 0) }}</div>
+                <div class="stat-label">DMZ Assets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #fb923c;">{{ zone_summary.get('Control', 0) }}</div>
+                <div class="stat-label">Control Assets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #34d399;">{{ zone_summary.get('Field Device', 0) }}</div>
+                <div class="stat-label">Field Devices</div>
+            </div>
+        </div>
+
+        <!-- Discovered Topology Map -->
+        <div class="panel">
+            <h2 class="panel-title">Inferred Zone Topology</h2>
+            <div class="topology-container">
+                {{ svg_diagram | safe }}
+            </div>
+        </div>
+
+        <!-- Violations Table -->
+        <div class="panel">
+            <h2 class="panel-title">Zone & Conduit Violations ({{ violations|length }})</h2>
+            {% if violations %}
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Severity</th>
+                            <th>Type / Description</th>
+                            <th>Affected Assets</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for v in violations %}
+                        <tr>
+                            <td class="code-font">{{ v.violation_id }}</td>
+                            <td>
+                                <span class="badge badge-{{ v.severity|lower }}">{{ v.severity }}</span>
+                            </td>
+                            <td>
+                                <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ v.type }}</div>
+                                <div class="violation-desc">{{ v.description }}</div>
+                                <div class="violation-ref">{{ v.iec_reference }}</div>
+                            </td>
+                            <td class="code-font">
+                                {% for ip in v.affected_assets %}
+                                    <div>{{ ip }}</div>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+                <h3>No Violations Detected</h3>
+                <p>The analyzed network complies with IEC 62443 zone boundary and conduit rules.</p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Asset Scorecards to be added in Commit 10 -->
+
+    </div>
+</body>
+</html>
